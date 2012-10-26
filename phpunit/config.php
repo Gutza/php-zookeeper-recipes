@@ -4,5 +4,5 @@
 * A simple configuration file for unit testing.
 */
 
-define("ZR_HOSTLIST", "127.0.0.1:2181");
+define("ZK_HOSTLIST", "127.0.0.1:2181");
 
