@@ -197,7 +197,6 @@ abstract class ZR_Base
 			return false;
 
 		$children=self::$zk_h->getChildren($parent);
-//mail("bogdan@moongate.ro", "Checking", print_r(array('base_key'=>$base_key, 'index_filter'=>$index_filter, "children: "=>$children), 1));
 		foreach($children as $child_key) {
 			$child=$parent."/".$child_key;
 			if ($name_filter===true || is_string($name_filter)) {
