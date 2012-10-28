@@ -108,7 +108,7 @@ class ZR_Xlock extends ZR_Base
 				return true;
 			if ($deadline<=microtime(true))
 				return false;
-			usleep($this->sleep_cycle);
+			usleep($this->sleep_cycle*1000000);
 		}
 	}
 
@@ -155,7 +155,7 @@ class ZR_Xlock extends ZR_Base
 				return true;
 			if ($deadline && $deadline<=microtime(true))
 				return false;
-			usleep($this->sleep_cycle);
+			usleep($this->sleep_cycle*1000000);
 		}
 	}
 

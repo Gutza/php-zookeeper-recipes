@@ -129,7 +129,7 @@ abstract class ZR_Base
 		while(self::$zk_h->getState()!=Zookeeper::CONNECTED_STATE) {
 			if ($deadline <= microtime(true))
 				throw new RuntimeException("Zookeeper connection timed out!");
-			usleep($this->sleep_cycle);
+			usleep($this->sleep_cycle*1000000);
 		}
 	}
 
@@ -156,13 +156,13 @@ abstract class ZR_Base
 	* or false if not a sequence node.
 	*
 	* @param string $key the key to compute the index for
-	* @return mixed (int) sequence number if a sequence node,
-	*	(bool) false otherwise
+	* @return mixed sequence number if a sequence node,
+	*	NULL otherwise
 	*/
 	protected function getIndex($key)
 	{
-		if (!preg_match("/[1-9][0-9]*$/", $key, $matches))
-			return false;
+		if (!preg_match("/[0-9]+$/", $key, $matches))
+			return NULL;
 
 		return intval($matches[0]);
 	}
@@ -173,7 +173,7 @@ abstract class ZR_Base
 	* Checks if there is any sequence node under $base_key's parent.
 	* By default, it checks if there is any such node whatsoever.
 	*
-	* If $index_filter is non-zero then it checks whether any node
+	* If $index_filter is non-null then it checks whether any node
 	* with a smaller index that $index_filter is present; returns
 	* false if all the nodes it finds are larger.
 	*
@@ -188,10 +188,8 @@ abstract class ZR_Base
 	* @param mixed $name_filter whether to filter by node name results.
 	* @return bool true if a matching node is found, false otherwise
 	*/
-	protected function isAnyLock($base_key, $index_filter=0, $name_filter=false)
+	protected function isAnyLock($base_key, $index_filter=NULL, $name_filter=false)
 	{
-		$index_filter=intval($index_filter);
-
 		$parent=self::getParentName($base_key);
 		if (!self::$zk_h->exists($parent))
 			return false;
@@ -209,12 +207,12 @@ abstract class ZR_Base
 					continue;
 			}
 
-			if (!$index_filter)
+			if (is_null($index_filter))
 				return true;
 
 			$child_index=$this->getIndex($child_key);
 
-			if (!$child_index)
+			if (is_null($child_index))
 				// Not a sequence node
 				continue;
 
