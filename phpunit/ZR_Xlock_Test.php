@@ -1,6 +1,12 @@
 <?php
 
 require_once dirname(dirname(__FILE__))."/include/ZR_lib.php";
+if (!file_exists(dirname(__FILE__)."/config.php")) {
+	echo
+		"In order to execute the PHPUnit tests you need a config.php file\n".
+		"in directory phpunit. Please use config.sample.php as a template.\n";
+	exit;
+}
 require_once "config.php";
 
 class ZR_Xlock_Test extends PHPUnit_Framework_TestCase
