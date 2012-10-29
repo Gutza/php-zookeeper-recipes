@@ -52,7 +52,7 @@ abstract class ZR_Base
 	*
 	* @var float
 	*/
-	public $connection_timeout=0.1;
+	public $connection_timeout=5;
 
 	/**
 	* A local cache of known paths. Used by {link ensurePath()}.
