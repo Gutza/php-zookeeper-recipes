@@ -18,7 +18,7 @@ class ZR_Xlock extends ZR_Base
 	/**
 	* Lock a ZK key.
 	*
-	* Creates a sequenced key and waits for {@link waitForLock()} to confirm
+	* Creates a sequenced key and waits for {@link _waitForLock()} to confirm
 	* ours is the first in that sequence.
 	*
 	* On success, it returns the sequence lock key (sequence number included),
@@ -33,17 +33,9 @@ class ZR_Xlock extends ZR_Base
 	public function lock($key, $timeout=0)
 	{
 		$full_key=$this->computeFullKey($this->getLockName($key));
-		$this->ensurePath($full_key);
-		$lock_key=self::$zk_h->create(
-			$full_key, // path
-			1, // value
-			$this->default_acl, // ACL
-			Zookeeper::EPHEMERAL | Zookeeper::SEQUENCE // flags
-		);
-		if (!$lock_key)
-			throw new RuntimeException("Failed creating lock node ".$full_key);
+		$lock_key=$this->createLockKey($full_key);
 
-		if (!$this->waitForLock($lock_key, $full_key, $timeout)) {
+		if (!$this->_waitForLock($lock_key, $full_key, $timeout)) {
 			// Clean up
 			self::$zk_h->delete($lock_key);
 			return false;
@@ -68,24 +60,6 @@ class ZR_Xlock extends ZR_Base
 	}
 
 	/**
-	* Unlocks a ZK key.
-	*
-	* It needs to be provided with a valid sequence lock key, as returned by
-	* {@link lock()}.
-	*
-	* @param string $lock_key the sequence lock key to unlock
-	* @return bool true on success, false on failure
-	*/
-	public function unlock($lock_key)
-	{
-		if (!is_string($lock_key))
-			throw new DomainException(
-				"This method expects a string!"
-			);
-		return self::$zk_h->delete($lock_key);
-	}
-
-	/**
 	* Waits for a sequenced key to be the first in the sequence,
 	* thus ensuring that specific key's process has the lock.
 	*
@@ -97,7 +71,7 @@ class ZR_Xlock extends ZR_Base
 	* @return bool true if ours is the first key in the sequence, false
 	*		otherwise.
 	*/
-	private function waitForLock($my_key, $base_key, $timeout)
+	private function _waitForLock($my_key, $base_key, $timeout)
 	{
 		$deadline=microtime(true)+$timeout;
 		$parent=self::getParentName($base_key);
