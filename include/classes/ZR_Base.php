@@ -201,7 +201,7 @@ abstract class ZR_Base
 				if ($name_filter===true)
 					$filter=$base_key;
 				else
-					$filter=$filter;
+					$filter=$name_filter;
 
 				if (substr($child, 0, strlen($filter))!=$filter)
 					continue;
@@ -221,6 +221,35 @@ abstract class ZR_Base
 				return true;
 		}
 		return false;
+	}
+
+	/**
+	* Creates a generic lock key, with the specified flags.
+	*
+	* This is a relatively low-level method, please see
+	* how it's used in other descendants.
+	*
+	* @param string $full_key the full key name to be created
+	* @param int $flags the Zookeeper flags for this lock;
+	*		if not specified, will use
+	*		Zookeeper::EPHEMERAL | Zookeeper::SEQUENCE
+	*/
+	protected function createLockKey($full_key, $flags=NULL)
+	{
+		if (is_null($flags))
+			$flags=Zookeeper::EPHEMERAL | Zookeeper::SEQUENCE;
+
+		$this->ensurePath($full_key);
+		$lock_key=self::$zk_h->create(
+			$full_key, // path
+			1, // value
+			$this->default_acl, // ACL
+			$flags // flags
+		);
+		if (!$lock_key)
+			throw new RuntimeException("Failed creating lock node ".$full_key);
+
+		return $lock_key;
 	}
 
 	/**
