@@ -141,19 +141,21 @@ class ZR_Slock extends ZR_Base
 	private function _waitForLock($key, $my_key, $base_key, $timeout, $mode)
 	{
 		$deadline=microtime(true)+$timeout;
-		$parent=self::getParentName($base_key);
 		$my_index=$this->getIndex($my_key);
 
 		while(true) {
-			if ($mode==self::MODE_READ)
+			if ($mode==self::MODE_READ){
 				$name_filter=$this->computeFullKey($this->getLockName($key, self::MODE_WRITE));
-			else
+            }else{
 				$name_filter=false;
+            }
 
-			if (!$this->isAnyLock($base_key, $my_index, $name_filter))
+			if (!$this->isAnyLock($base_key, $my_index, $name_filter)){
 				return true;
-			if ($deadline<=microtime(true))
+            }
+			if ($deadline<=microtime(true)){
 				return false;
+            }
 			usleep($this->sleep_cycle*1000000);
 		}
 	}
@@ -208,16 +210,19 @@ class ZR_Slock extends ZR_Base
 	*/
 	public function waitForAllWriteLocks($key, $timeout=0)
 	{
-		if ($timeout)
+		if ($timeout){
 			$deadline=microtime(true)+$timeout;
-		else
+        }else{
 			$deadline=0;
+        }
 
 		while(true) {
-			if (!$this->isReadLocked($key))
+			if (!$this->isReadLocked($key)){
 				return true;
-			if ($deadline && $deadline<=microtime(true))
+            }
+			if ($deadline && $deadline<=microtime(true)){
 				return false;
+            }
 			usleep($this->sleep_cycle*1000000);
 		}
 	}
@@ -240,16 +245,19 @@ class ZR_Slock extends ZR_Base
 	*/
 	public function waitForAllLocks($key, $timeout=0)
 	{
-		if ($timeout)
+		if ($timeout){
 			$deadline=microtime(true)+$timeout;
-		else
+        }else{
 			$deadline=0;
+        }
 
 		while(true) {
-			if (!$this->isWriteLocked($key))
+			if (!$this->isWriteLocked($key)){
 				return true;
-			if ($deadline && $deadline<=microtime(true))
+            }
+			if ($deadline && $deadline<=microtime(true)){
 				return false;
+            }
 			usleep($this->sleep_cycle*1000000);
 		}
 	}

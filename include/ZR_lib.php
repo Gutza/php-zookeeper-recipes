@@ -28,8 +28,9 @@
 function ZR_autoloader($class_name)
 {
 	$fname=dirname(__FILE__)."/classes/".$class_name.".php";
-	if (!is_readable($fname))
+	if (!is_readable($fname)){
 		return false;
+    }
 
 	include $fname;
 	return true;

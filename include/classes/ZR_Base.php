@@ -81,32 +81,37 @@ abstract class ZR_Base
 	public function __construct($path, $host=NULL, $renew=false)
 	{
 		if (is_null($host)) {
-			if (!defined("ZR_HOSTLIST"))
+			if (!defined("ZR_HOSTLIST")){
 				throw new RuntimeException(
 					"Either specify the host explicitly ".
 					"or define constant ZR_HOSTLIST."
 				);
+            }
 			$host=ZR_HOSTLIST;
 		}
 
-		if (!isset($path) || is_null($path) || !is_string($path) || !strlen($path))
+		if (!isset($path) || is_null($path) || !is_string($path) || !strlen($path)){
 			throw new RuntimeException(
 				"The path needs to be a non-empty string."
 			);
+        }
 
-		while (substr($path, -1, 1)=='/')
+		while (substr($path, -1, 1)=='/'){
 			// Clip the final slash(es)
 			$path=substr($path, 0, -1);
+        }
 
-		if (!strlen($path))
+		if (!strlen($path)){
 			// Add a slash if we actually work in the root
 			$path='/';
+        }
 
 		$this->base_path=$path;
 
-		if ($renew && isset(self::$zk_h))
+		if ($renew && isset(self::$zk_h)){
 			// It NEEDS to be manually "unset" (not simply replaced with the new one)
 			self::$zk_h=NULL;
+        }
 
 		if (empty(self::$zk_h)) {
 			self::$zk_h=new Zookeeper();
@@ -127,8 +132,9 @@ abstract class ZR_Base
 	{
 		$deadline=microtime(true)+$this->connection_timeout;
 		while(self::$zk_h->getState()!=Zookeeper::CONNECTED_STATE) {
-			if ($deadline <= microtime(true))
+			if ($deadline <= microtime(true)){
 				throw new RuntimeException("Zookeeper connection timed out!");
+            }
 			usleep($this->sleep_cycle*1000000);
 		}
 	}
@@ -144,10 +150,11 @@ abstract class ZR_Base
 	*/
 	public function unlock($lock_key)
 	{
-		if (!is_string($lock_key))
+		if (!is_string($lock_key)){
 			throw new DomainException(
 				"This method expects a string!"
 			);
+        }
 		return self::$zk_h->delete($lock_key);
 	}
 
@@ -161,8 +168,9 @@ abstract class ZR_Base
 	*/
 	protected function getIndex($key)
 	{
-		if (!preg_match("/[0-9]+$/", $key, $matches))
+		if (!preg_match("/[0-9]+$/", $key, $matches)){
 			return NULL;
+        }
 
 		return intval($matches[0]);
 	}
@@ -191,34 +199,40 @@ abstract class ZR_Base
 	protected function isAnyLock($base_key, $index_filter=NULL, $name_filter=false)
 	{
 		$parent=self::getParentName($base_key);
-		if (!self::$zk_h->exists($parent))
+		if (!self::$zk_h->exists($parent)){
 			return false;
+        }
 
 		$children=self::$zk_h->getChildren($parent);
 		foreach($children as $child_key) {
 			$child=$parent."/".$child_key;
 			if ($name_filter===true || is_string($name_filter)) {
-				if ($name_filter===true)
+				if ($name_filter===true){
 					$filter=$base_key;
-				else
+                }else{
 					$filter=$name_filter;
+                }
 
-				if (substr($child, 0, strlen($filter))!=$filter)
+				if (substr($child, 0, strlen($filter))!=$filter){
 					continue;
+                }
 			}
 
-			if (is_null($index_filter))
+			if (is_null($index_filter)){
 				return true;
+            }
 
 			$child_index=$this->getIndex($child_key);
 
-			if (is_null($child_index))
+			if (is_null($child_index)){
 				// Not a sequence node
 				continue;
+            }
 
-			if ($child_index<$index_filter)
+			if ($child_index<$index_filter){
 				// smaller index
 				return true;
+            }
 		}
 		return false;
 	}
@@ -236,8 +250,9 @@ abstract class ZR_Base
 	*/
 	protected function createLockKey($full_key, $flags=NULL)
 	{
-		if (is_null($flags))
+		if (is_null($flags)){
 			$flags=Zookeeper::EPHEMERAL | Zookeeper::SEQUENCE;
+        }
 
 		$this->ensurePath($full_key);
 		$lock_key=self::$zk_h->create(
@@ -246,8 +261,9 @@ abstract class ZR_Base
 			$this->default_acl, // ACL
 			$flags // flags
 		);
-		if (!$lock_key)
+		if (!$lock_key){
 			throw new RuntimeException("Failed creating lock node ".$full_key);
+        }
 
 		return $lock_key;
 	}
@@ -264,8 +280,9 @@ abstract class ZR_Base
 	*/
 	protected function computeFullKey($key)
 	{
-		if (substr($key, 0, 1)=='/')
+		if (substr($key, 0, 1)=='/'){
 			return $key;
+        }
 		return $this->base_path.'/'.$key;
 	}
 
@@ -279,15 +296,27 @@ abstract class ZR_Base
 	protected function ensurePath($key)
 	{
 		$parent=self::getParentName($key);
-		if (in_array($key, self::$known_paths))
+		if (in_array($key, self::$known_paths)){
 			return true;
-		if (self::$zk_h->exists($parent))
+        }
+		if (self::$zk_h->exists($parent)){
 			return true;
-		if (!$this->ensurePath($parent))
+        }
+		if (!$this->ensurePath($parent)){
 			return false; // We should never execute this
-		if (self::$zk_h->create($parent, 1, $this->default_acl))
+        }
+		if (self::$zk_h->create($parent, 1, $this->default_acl)){
 			return true;
-		throw new RuntimeException("Failed creating path [".$parent."]");
+        }
+        // checks below to avoid race condition of multiple clients creating the same parent
+        if(!$znode = self::$zk_h->getAcl($parent)){
+            throw new RuntimeException("Failed creating path [".$parent."]");
+        }
+        if($znode[1] !== $this->default_acl){
+            throw new RuntimeException("Failed creating path [".$parent."]");
+        }
+        // someone else created the lock with the same acl
+        return true;
 	}
 
 	/**
