@@ -74,14 +74,15 @@ class ZR_Xlock extends ZR_Base
 	private function _waitForLock($my_key, $base_key, $timeout)
 	{
 		$deadline=microtime(true)+$timeout;
-		$parent=self::getParentName($base_key);
 		$my_index=$this->getIndex($my_key);
 
 		while(true) {
-			if (!$this->isAnyLock($base_key, $my_index))
+			if (!$this->isAnyLock($base_key, $my_index)){
 				return true;
-			if ($deadline<=microtime(true))
+            }
+			if ($deadline<=microtime(true)){
 				return false;
+            }
 			usleep($this->sleep_cycle*1000000);
 		}
 	}
@@ -119,16 +120,19 @@ class ZR_Xlock extends ZR_Base
 	*/
 	public function waitForAllLocks($key, $timeout=0)
 	{
-		if ($timeout)
+		if ($timeout){
 			$deadline=microtime(true)+$timeout;
-		else
+        }else{
 			$deadline=0;
+        }
 
 		while(true) {
-			if (!$this->isLocked($key))
+			if (!$this->isLocked($key)){
 				return true;
-			if ($deadline && $deadline<=microtime(true))
+            }
+			if ($deadline && $deadline<=microtime(true)){
 				return false;
+            }
 			usleep($this->sleep_cycle*1000000);
 		}
 	}
