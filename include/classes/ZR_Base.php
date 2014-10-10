@@ -287,6 +287,11 @@ abstract class ZR_Base
 			return false; // We should never execute this
 		if (self::$zk_h->create($parent, 1, $this->default_acl))
 			return true;
+		// One last chance: maybe another thread created it,
+		// let's check one more time before complaining.
+		// Thanks bradjorgensen @ GitHub for noticing this!
+		if (self::$zk_h->exists($parent))
+			return true;
 		throw new RuntimeException("Failed creating path [".$parent."]");
 	}
 
