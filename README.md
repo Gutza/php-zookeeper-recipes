@@ -15,6 +15,8 @@ Here’s what has been implemented so far:
 
 Creating an exclusive lock, using `ZR_Xlock`.
 
+#### Code
+
 ```php
 require_once dirname(__FILE__). '/include/ZR_lib.php';
 
@@ -66,3 +68,9 @@ try {
 
 echo 'Lock '. $lock .' released.' . PHP_EOL;
 ```
+
+#### Output
+
+    $ php lock.php 
+    Lock /my_path/my_lock/lock-0000000012 obtained, doing work...
+    Lock /my_path/my_lock/lock-0000000012 released.
