@@ -25,10 +25,9 @@ require_once dirname(__FILE__). '/include/ZR_lib.php';
 define("ZR_HOSTLIST", "127.0.0.1:2181");
 
 /**
- * Configurable timeout to obtain the lock, in milliseconds
- * This example uses a timeout of 5 seconds.
+ * Configurable timeout to obtain the lock in seconds
  */
-$timeout = 5000;
+$timeout = 5;
 
 /**
  * Create ZR_Xlock object, with base path 'my_path' and attempt to
